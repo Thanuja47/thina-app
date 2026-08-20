@@ -38,23 +38,16 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#FF2A55",
-          "sounds": []
-        }
-      ]
+      "expo-notifications"
     ],
     "extra": {
       "supabaseUrl": "https://vohtjkesxpscfzhftoxs.supabase.co",
       "supabaseAnonKey": "sb_publishable_Dhxhj2r5G4-y2JWLWXX3eg_Ql6Je_ZJ",
       "privacyPolicyUrl": "https://thanuja47.github.io/thina-app/privacy",
       "eas": {
-        "projectId": ""
+        "projectId": "05365548-e2a5-4c6a-9ac8-3ca163361afe"
       }
     },
-    "owner": ""
+    "owner": "thanuja477"
   }
 }

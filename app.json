@@ -1,25 +1,60 @@
 {
   "expo": {
-    "name": "thina-app",
-    "slug": "thina-app",
+    "name": "Thina Deals",
+    "slug": "thina-deals",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#090B10"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "app.ThinaDeals",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to scan QR codes for coupon redemption.",
+        "NSPhotoLibraryUsageDescription": "Used to upload your profile picture."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#090B10"
       },
-      "predictiveBackGestureEnabled": false
+      "package": "app.ThinaDeals",
+      "versionCode": 1,
+      "permissions": [
+        "NOTIFICATIONS",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF2A55",
+          "sounds": []
+        }
+      ]
+    ],
+    "extra": {
+      "supabaseUrl": "https://placeholder.supabase.co",
+      "supabaseAnonKey": "sb_publishable_Dhxhj2r5G4-y2JWLWXX3eg_Ql6Je_ZJ",
+      "privacyPolicyUrl": "https://thanuja47.github.io/thina-app/privacy",
+      "eas": {
+        "projectId": ""
+      }
+    },
+    "owner": ""
   }
 }

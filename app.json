@@ -31,6 +31,9 @@
       "permissions": [
         "NOTIFICATIONS",
         "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "NOTIFICATIONS",
+        "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ]
     },
@@ -48,6 +51,12 @@
         "projectId": "05365548-e2a5-4c6a-9ac8-3ca163361afe"
       }
     },
-    "owner": "thanuja477"
+    "owner": "thanuja477",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/05365548-e2a5-4c6a-9ac8-3ca163361afe"
+    }
   }
 }

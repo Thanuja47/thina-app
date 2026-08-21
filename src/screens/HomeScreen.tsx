@@ -1,169 +1,162 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  RefreshControl,
-  Pressable,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  TextInput, Dimensions, ImageBackground, Platform, StatusBar,
 } from 'react-native';
-import { Colors, Spacing, Typography, Radius } from '../constants/theme';
-import { MOCK_DEALS, Deal } from '../data/mockData';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { MOCK_DEALS } from '../data/mockData';
+import { Colors, Spacing, Typography, Radius } from '../constants/theme';
 
-interface HomeScreenProps {
-  navigation: any;
-}
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width - Spacing.base * 2;
 
 const CATEGORIES = ['All', 'Dining', 'Cinema', 'Shopping', 'Travel', 'Groceries'];
 
-export default function HomeScreen({ navigation }: HomeScreenProps) {
-  const { user } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [refreshing, setRefreshing] = useState(false);
+const BADGE_COLOR: Record<string, string> = {
+  'BOGO FREE': '#10B981',
+  default: Colors.primary,
+};
 
-  const filteredDeals =
-    selectedCategory === 'All'
-      ? MOCK_DEALS
-      : MOCK_DEALS.filter((d) => d.category === selectedCategory);
+const badgeColor = (discount: string) =>
+  discount.includes('BOGO') ? BADGE_COLOR['BOGO FREE'] : discount.includes('OFF') ? Colors.primary : '#8B5CF6';
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+export default function HomeScreen({ navigation }: any) {
+  const { user, userProfile } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [activeCategory, setActiveCategory] = useState('All');
 
-  const renderDealCard = ({ item }: { item: Deal }) => (
-    <TouchableOpacity
-      style={styles.dealCard}
-      onPress={() => navigation.navigate('DealDetail', { deal: item })}
-      activeOpacity={0.85}
-    >
-      <Image source={{ uri: item.image }} style={styles.dealImage} resizeMode="cover" />
-      <View style={styles.discountBadge}>
-        <Text style={styles.discountText}>{item.discount}</Text>
-      </View>
-      {item.popular && (
-        <View style={styles.popularBadge}>
-          <Text style={styles.popularText}>🔥 Popular</Text>
-        </View>
-      )}
-      <View style={styles.dealBody}>
-        <Text style={styles.merchantName}>{item.merchant}</Text>
-        <Text style={styles.dealTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <View style={styles.dealFooter}>
-          <View style={styles.pointsRow}>
-            <Text style={styles.pointsValue}>{item.pointsCost}</Text>
-            <Text style={styles.pointsLabel}> Pts</Text>
-          </View>
-          <Text style={styles.expiry}>{item.expiry}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+  const filtered = activeCategory === 'All'
+    ? MOCK_DEALS
+    : MOCK_DEALS.filter(d => d.category === activeCategory);
+
+  const firstName = userProfile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+  const pts = userProfile?.points_balance ?? 2450;
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
-      >
-        {/* Header */}
+    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+
+        {/* ── Header ── */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>
-              Hello, {user?.email?.split('@')[0] || 'there'} 👋
-            </Text>
-            <Text style={styles.headerTitle}>Today's Best Deals</Text>
+            <Text style={styles.greeting}>Hello, {firstName} 👋</Text>
+            <Text style={styles.heroTitle}>Today's Best Deals</Text>
           </View>
-          <View style={styles.pointsPill}>
-            <Text style={styles.pointsPillText}>⭐ 2,450 Pts</Text>
+          <View style={styles.ptsChip}>
+            <Ionicons name="star" size={14} color="#FFB800" />
+            <Text style={styles.ptsText}>{pts.toLocaleString()} Pts</Text>
           </View>
         </View>
 
-        {/* Hero Banner */}
+        {/* ── Hero Banner ── */}
         <View style={styles.heroBanner}>
-          <View style={styles.heroBannerContent}>
-            <Text style={styles.heroLabel}>🎬 Movie Night Special</Text>
-            <Text style={styles.heroTitle}>Stream Sinhala Cinema{'\n'}+ Earn Real Rewards</Text>
-            <TouchableOpacity style={styles.heroBtn}>
-              <Text style={styles.heroBtnText}>Explore Bundles →</Text>
+          <View style={styles.heroContent}>
+            <View style={styles.heroBadge}>
+              <Ionicons name="film" size={12} color="#FFB800" />
+              <Text style={styles.heroBadgeText}>Movie Night Special</Text>
+            </View>
+            <Text style={styles.heroHeadline}>Stream Sinhala Cinema{'\n'}+ Earn Real Rewards</Text>
+            <Text style={styles.heroSub}>Watch. Earn. Redeem local deals.</Text>
+            <TouchableOpacity
+              style={styles.heroBtn}
+              onPress={() => navigation.navigate('MoviesTab')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.heroBtnText}>Explore Bundles</Text>
+              <Ionicons name="arrow-forward" size={14} color={Colors.white} />
             </TouchableOpacity>
           </View>
+          <View style={styles.heroDecor}>
+            <Text style={styles.heroDecorText}>🎬</Text>
+          </View>
         </View>
 
-        {/* Category Filters */}
+        {/* ── Categories ── */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScroll}
+          contentContainerStyle={styles.catScroll}
+          style={{ marginBottom: Spacing.base }}
         >
-          {CATEGORIES.map((cat) => (
+          {CATEGORIES.map(cat => (
             <TouchableOpacity
               key={cat}
-              style={[styles.categoryChip, selectedCategory === cat && styles.categoryChipActive]}
-              onPress={() => setSelectedCategory(cat)}
+              style={[styles.catChip, activeCategory === cat && styles.catChipActive]}
+              onPress={() => setActiveCategory(cat)}
+              activeOpacity={0.8}
             >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selectedCategory === cat && styles.categoryTextActive,
-                ]}
-              >
-                {cat}
-              </Text>
+              <Text style={[styles.catText, activeCategory === cat && styles.catTextActive]}>{cat}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
-        {/* Section Title */}
-        <View style={styles.sectionHeader}>
+        {/* ── Deals Header ── */}
+        <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>
-            {selectedCategory === 'All' ? 'All Deals' : selectedCategory + ' Deals'}
+            {activeCategory === 'All' ? 'All Deals' : activeCategory + ' Deals'}
           </Text>
-          <Text style={styles.sectionCount}>{filteredDeals.length} available</Text>
+          <View style={styles.availablePill}>
+            <Text style={styles.availableText}>{filtered.length} available</Text>
+          </View>
         </View>
 
-        {/* Deals List */}
-        <View style={styles.dealsList}>
-          {filteredDeals.map((deal) => (
-            <TouchableOpacity
-              key={deal.id}
-              style={styles.dealCard}
-              onPress={() => navigation.navigate('DealDetail', { deal })}
-              activeOpacity={0.85}
+        {/* ── Deal Cards ── */}
+        {filtered.map(deal => (
+          <TouchableOpacity
+            key={deal.id}
+            style={styles.dealCard}
+            onPress={() => navigation.navigate('DealDetail', { deal })}
+            activeOpacity={0.9}
+          >
+            <ImageBackground
+              source={{ uri: deal.image }}
+              style={styles.dealImage}
+              imageStyle={styles.dealImageStyle}
+              resizeMode="cover"
             >
-              <Image source={{ uri: deal.image }} style={styles.dealImage} resizeMode="cover" />
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>{deal.discount}</Text>
-              </View>
+              <View style={styles.dealImageOverlay} />
               {deal.popular && (
                 <View style={styles.popularBadge}>
                   <Text style={styles.popularText}>🔥 Popular</Text>
                 </View>
               )}
-              <View style={styles.dealBody}>
-                <Text style={styles.merchantName}>{deal.merchant}</Text>
-                <Text style={styles.dealTitle} numberOfLines={2}>
-                  {deal.title}
-                </Text>
-                <View style={styles.dealFooter}>
-                  <View style={styles.pointsRow}>
-                    <Text style={styles.pointsValue}>{deal.pointsCost}</Text>
-                    <Text style={styles.pointsLabel}> Pts</Text>
-                  </View>
-                  <Text style={styles.expiry}>{deal.expiry}</Text>
+              <View style={[styles.discountBadge, { backgroundColor: badgeColor(deal.discount) }]}>
+                <Text style={styles.discountText}>{deal.discount}</Text>
+              </View>
+            </ImageBackground>
+
+            <View style={styles.dealBody}>
+              <View style={styles.dealBodyTop}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.merchantName}>{deal.merchant.toUpperCase()}</Text>
+                  <Text style={styles.dealTitle} numberOfLines={2}>{deal.title}</Text>
+                </View>
+                <View style={styles.ratingBox}>
+                  <Ionicons name="star" size={11} color="#FFB800" />
+                  <Text style={styles.ratingText}>{deal.rating}</Text>
                 </View>
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
 
-        <View style={{ height: 32 }} />
+              <View style={styles.dealFooter}>
+                <View style={styles.ptsRow}>
+                  <Ionicons name="star" size={14} color="#FFB800" />
+                  <Text style={styles.ptsCost}>{deal.pointsCost}</Text>
+                  <Text style={styles.ptsLabel}>Pts</Text>
+                  {deal.dealPrice && (
+                    <Text style={styles.dealPrice}> · {deal.dealPrice}</Text>
+                  )}
+                </View>
+                <View style={styles.expiryRow}>
+                  <Ionicons name="time-outline" size={12} color={Colors.textMuted} />
+                  <Text style={styles.expiryText}>{deal.expiry}</Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
     </View>
   );
@@ -172,112 +165,108 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
+    paddingHorizontal: Spacing.base, marginBottom: 16,
   },
-  greeting: { color: Colors.textSecondary, fontSize: Typography.sm },
-  headerTitle: { color: Colors.white, fontSize: Typography.xl, fontWeight: '800' },
-  pointsPill: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
-    borderWidth: 1,
-    borderColor: Colors.border,
+  greeting: { fontSize: Typography.sm, color: Colors.textSecondary, fontWeight: '600', marginBottom: 2 },
+  heroTitle: { fontSize: 26, fontWeight: '800', color: Colors.white, letterSpacing: -0.5 },
+  ptsChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,184,0,0.12)', borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: 'rgba(255,184,0,0.25)',
   },
-  pointsPillText: { color: Colors.amber, fontSize: Typography.sm, fontWeight: '700' },
+  ptsText: { color: '#FFB800', fontSize: Typography.sm, fontWeight: '800' },
+
   heroBanner: {
-    marginHorizontal: Spacing.base,
-    marginBottom: Spacing.base,
-    borderRadius: Radius['2xl'],
-    backgroundColor: '#1A0A12',
-    borderWidth: 1,
-    borderColor: '#3D1525',
-    padding: Spacing.lg,
-    overflow: 'hidden',
+    marginHorizontal: Spacing.base, marginBottom: 20,
+    backgroundColor: '#1A0A1E', borderRadius: Radius['2xl'],
+    padding: 20, flexDirection: 'row', alignItems: 'center',
+    overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,42,85,0.25)',
   },
-  heroBannerContent: {},
-  heroLabel: { color: Colors.primary, fontSize: Typography.xs, fontWeight: '700', marginBottom: 6 },
-  heroTitle: { color: Colors.white, fontSize: Typography.lg, fontWeight: '800', lineHeight: 26, marginBottom: Spacing.md },
+  heroContent: { flex: 1, gap: 8 },
+  heroBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,184,0,0.12)', borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start',
+    borderWidth: 1, borderColor: 'rgba(255,184,0,0.2)',
+  },
+  heroBadgeText: { color: '#FFB800', fontSize: 11, fontWeight: '700' },
+  heroHeadline: { fontSize: 18, fontWeight: '800', color: Colors.white, lineHeight: 24 },
+  heroSub: { fontSize: Typography.xs, color: Colors.textSecondary, fontWeight: '500' },
   heroBtn: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.md,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: Colors.primary, borderRadius: Radius.xl,
+    paddingHorizontal: 16, paddingVertical: 10, alignSelf: 'flex-start',
+    marginTop: 4,
   },
-  heroBtnText: { color: Colors.white, fontWeight: '700', fontSize: Typography.sm },
-  categoryScroll: {
-    paddingHorizontal: Spacing.base,
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
+  heroBtnText: { color: Colors.white, fontSize: Typography.sm, fontWeight: '800' },
+  heroDecor: { width: 70, alignItems: 'center', justifyContent: 'center' },
+  heroDecorText: { fontSize: 52 },
+
+  catScroll: { paddingHorizontal: Spacing.base, gap: 8 },
+  catChip: {
+    paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 24, backgroundColor: '#1C1F2A',
+    borderWidth: 1, borderColor: '#2A2D3A',
   },
-  categoryChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
+  catChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  catText: { color: Colors.textSecondary, fontSize: Typography.sm, fontWeight: '600' },
+  catTextActive: { color: Colors.white, fontWeight: '800' },
+
+  sectionRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: Spacing.base, marginBottom: 12,
   },
-  categoryChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  categoryText: { color: Colors.textSecondary, fontSize: Typography.sm, fontWeight: '600' },
-  categoryTextActive: { color: Colors.white, fontWeight: '700' },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    marginBottom: Spacing.md,
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: Colors.white },
+  availablePill: {
+    backgroundColor: '#1C1F2A', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4,
   },
-  sectionTitle: { color: Colors.white, fontSize: Typography.md, fontWeight: '700' },
-  sectionCount: { color: Colors.textMuted, fontSize: Typography.xs },
-  dealsList: { paddingHorizontal: Spacing.base, gap: Spacing.md },
+  availableText: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
+
   dealCard: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius['2xl'],
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
+    marginHorizontal: Spacing.base, marginBottom: 16,
+    backgroundColor: '#151820', borderRadius: Radius['2xl'],
+    overflow: 'hidden', borderWidth: 1, borderColor: '#22252F',
+    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3, shadowRadius: 8,
   },
-  dealImage: { width: '100%', height: 160 },
-  discountBadge: {
-    position: 'absolute',
-    top: Spacing.md,
-    right: Spacing.md,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
+  dealImage: { width: '100%', height: 200 },
+  dealImageStyle: { borderTopLeftRadius: Radius['2xl'], borderTopRightRadius: Radius['2xl'] },
+  dealImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderTopLeftRadius: Radius['2xl'],
+    borderTopRightRadius: Radius['2xl'],
   },
-  discountText: { color: Colors.white, fontSize: Typography.xs, fontWeight: '800' },
   popularBadge: {
-    position: 'absolute',
-    top: Spacing.md,
-    left: Spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
+    position: 'absolute', top: 12, left: 12,
+    backgroundColor: 'rgba(0,0,0,0.75)', borderRadius: 16,
+    paddingHorizontal: 12, paddingVertical: 5,
+    backdropFilter: 'blur(10px)',
   },
-  popularText: { color: Colors.white, fontSize: Typography.xs, fontWeight: '700' },
-  dealBody: { padding: Spacing.md },
-  merchantName: {
-    color: Colors.amber,
-    fontSize: Typography.xs,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+  popularText: { color: Colors.white, fontSize: 12, fontWeight: '800' },
+  discountBadge: {
+    position: 'absolute', top: 12, right: 12,
+    borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5,
   },
-  dealTitle: { color: Colors.white, fontSize: Typography.base, fontWeight: '700', marginBottom: Spacing.sm },
+  discountText: { color: Colors.white, fontSize: 12, fontWeight: '900' },
+
+  dealBody: { padding: 16, gap: 10 },
+  dealBodyTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  merchantName: { fontSize: 10, color: Colors.primary, fontWeight: '800', letterSpacing: 1, marginBottom: 2 },
+  dealTitle: { fontSize: 15, fontWeight: '800', color: Colors.white, lineHeight: 21 },
+  ratingBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: 'rgba(255,184,0,0.1)', borderRadius: 10,
+    paddingHorizontal: 8, paddingVertical: 4,
+  },
+  ratingText: { color: '#FFB800', fontSize: 11, fontWeight: '800' },
+
   dealFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pointsRow: { flexDirection: 'row', alignItems: 'baseline' },
-  pointsValue: { color: Colors.amber, fontSize: Typography.lg, fontWeight: '900' },
-  pointsLabel: { color: Colors.textSecondary, fontSize: Typography.sm },
-  expiry: { color: Colors.textMuted, fontSize: Typography.xs },
+  ptsRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  ptsCost: { color: '#FFB800', fontSize: 16, fontWeight: '900' },
+  ptsLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  dealPrice: { color: Colors.textMuted, fontSize: 12, fontWeight: '500' },
+  expiryRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  expiryText: { color: Colors.textMuted, fontSize: 11, fontWeight: '500' },
 });

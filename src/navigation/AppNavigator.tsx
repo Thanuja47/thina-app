@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { Colors, Typography } from '../constants/theme';
+import { Colors, Typography, Radius } from '../constants/theme';
 
 import AuthScreen from '../screens/AuthScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -25,30 +27,45 @@ function HomeStack() {
 }
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 12);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.card,
-          borderTopColor: Colors.border,
+          backgroundColor: '#0D0F15',
+          borderTopColor: 'rgba(255, 255, 255, 0.08)',
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 56 + bottomInset,
+          paddingBottom: bottomInset,
+          paddingTop: 6,
+          elevation: 20,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 10,
         },
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: {
           fontSize: Typography.xs,
           fontWeight: '700',
+          marginTop: 2,
         },
-        tabBarIcon: ({ focused, color }) => {
-          let icon = '🏷️';
-          if (route.name === 'HomeTab') icon = '🏷️';
-          if (route.name === 'MoviesTab') icon = '🎬';
-          if (route.name === 'ProfileTab') icon = '👤';
-          return <Text style={{ fontSize: 18 }}>{icon}</Text>;
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = 'pricetags';
+
+          if (route.name === 'HomeTab') {
+            iconName = focused ? 'pricetags' : 'pricetags-outline';
+          } else if (route.name === 'MoviesTab') {
+            iconName = focused ? 'film' : 'film-outline';
+          } else if (route.name === 'ProfileTab') {
+            iconName = focused ? 'person-circle' : 'person-circle-outline';
+          }
+
+          return <Ionicons name={iconName} size={22} color={color} />;
         },
       })}
     >
@@ -68,6 +85,7 @@ export default function AppNavigator() {
         <View style={styles.logoBox}>
           <Text style={styles.logoText}>T+</Text>
         </View>
+        <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 16 }} />
         <Text style={styles.loadingText}>Loading Thina Deals...</Text>
       </View>
     );
@@ -90,12 +108,11 @@ const styles = StyleSheet.create({
   logoBox: {
     width: 72,
     height: 72,
-    borderRadius: 20,
+    borderRadius: Radius.xl,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
   },
   logoText: { fontSize: 28, fontWeight: '900', color: Colors.white },
-  loadingText: { color: Colors.textSecondary, fontSize: Typography.sm, fontWeight: '600' },
+  loadingText: { color: Colors.textSecondary, fontSize: Typography.sm, fontWeight: '600', marginTop: 12 },
 });
